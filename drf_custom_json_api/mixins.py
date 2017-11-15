@@ -1,0 +1,1 @@
+from rest_framework_json_api.mixins import *
