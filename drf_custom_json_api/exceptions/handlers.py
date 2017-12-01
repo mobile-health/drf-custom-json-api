@@ -1,0 +1,1 @@
+from rest_framework_friendly_errors.handlers import *

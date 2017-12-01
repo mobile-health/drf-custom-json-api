@@ -99,7 +99,8 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
     install_requires=[
-        'djangorestframework-jsonapi'
+        'djangorestframework-jsonapi',
+        'drf-friendly-errors'
     ],
     setup_requires=pytest_runner + sphinx + wheel,
     tests_require=[
