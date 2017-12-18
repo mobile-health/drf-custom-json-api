@@ -1,15 +1,40 @@
 from __future__ import unicode_literals
 
-from collections import OrderedDict
 from rest_framework_json_api import utils
 from rest_framework_json_api import renderers
-from rest_framework.serializers import BaseSerializer, ListSerializer, Serializer
+from collections import OrderedDict
 from rest_framework import relations
-from django.utils import six
+from django.utils import encoding, six
 from rest_framework.settings import api_settings
+from rest_framework.serializers import BaseSerializer, ListSerializer, Serializer
 
 
 class JSONRenderer(renderers.JSONRenderer):
+    @classmethod
+    def build_json_resource_obj(cls, fields, resource, resource_instance, resource_name,
+                                force_type_resolution=False):
+        # Determine type from the instance if the underlying model is polymorphic
+        if force_type_resolution:
+            resource_name = utils.get_resource_type_from_instance(resource_instance)
+        resource_data = [
+            ('object', resource_name),
+            ('id', resource_instance.pk if resource_instance else None),
+        ]
+        attributes = cls.extract_attributes(fields, resource)
+        for field, value in attributes.items():
+            resource_data.append((field, value))
+
+        relationships = cls.extract_relationships(fields, resource, resource_instance)
+        for field, value in relationships.items():
+            resource_data.append((field, value))
+        # if relationships:
+        #    resource_data.append(('relationships', relationships))
+
+        # Add 'self' link if field is present and valid
+        if api_settings.URL_FIELD_NAME in resource and \
+                isinstance(fields[api_settings.URL_FIELD_NAME], relations.RelatedField):
+            resource_data.append(('links', {'self': resource[api_settings.URL_FIELD_NAME]}))
+        return OrderedDict(resource_data)
 
     @classmethod
     def extract_relationships(cls, fields, resource, resource_instance):
@@ -53,10 +78,9 @@ class JSONRenderer(renderers.JSONRenderer):
                     relation_data.append(
                         OrderedDict([
                             ('object', relation_type),
-                            ('id', related_object.pk)
+                            ('id', encoding.force_text(related_object.pk))
                         ])
                     )
-                    #relation_data.update(serializer_data)
 
                 data.update({field_name: {
                     'links': {
@@ -65,11 +89,10 @@ class JSONRenderer(renderers.JSONRenderer):
                     'meta': {
                         'count': len(relation_data),
                         'include': []
-                        #'include': resource.get(field_name).keys()
                     }
                 }})
                 continue
-            
+
             if isinstance(field, ResourceRelatedField):
                 resolved, relation_instance = utils.get_relation_instance(
                     resource_instance, source, field.parent
@@ -79,7 +102,10 @@ class JSONRenderer(renderers.JSONRenderer):
 
                 # special case for ResourceRelatedField
                 relation_data = {
-                    'data': resource.get(field_name)
+                    'data': resource.get(field_name),
+                    'meta': {
+                        'include': []
+                    }
                 }
 
                 field_links = field.get_links(
@@ -103,12 +129,16 @@ class JSONRenderer(renderers.JSONRenderer):
                 relation_data = {
                     'data': (
                         OrderedDict([
-                            ('object', relation_type), ('id', relation_id)
+                            ('object', relation_type), ('id', encoding.force_text(relation_id))
                         ])
-                        if relation_id is not None else None)
+                        if relation_id is not None else None),
+                    'meta': {
+                        'include': []
+                    }
                 }
 
-                if (isinstance(field, relations.HyperlinkedRelatedField) and
+                if (
+                            isinstance(field, relations.HyperlinkedRelatedField) and
                             resource.get(field_name)
                 ):
                     relation_data.update(
@@ -118,14 +148,6 @@ class JSONRenderer(renderers.JSONRenderer):
                             }
                         }
                     )
-                relation_data.update(
-                    {
-                        'meta': {
-                            #'include': resource.get(field_name).keys(),
-                            'include': []
-                        }
-                    }
-                )
                 data.update({field_name: relation_data})
                 continue
 
@@ -137,10 +159,9 @@ class JSONRenderer(renderers.JSONRenderer):
                     continue
 
                 if isinstance(field.child_relation, ResourceRelatedField):
-                    serializer_data = resource.get(field_name)
                     # special case for ResourceRelatedField
                     relation_data = {
-                        'data': serializer_data,
+                        'data': resource.get(field_name)
                     }
 
                     field_links = field.child_relation.get_links(
@@ -154,8 +175,7 @@ class JSONRenderer(renderers.JSONRenderer):
                     relation_data.update(
                         {
                             'meta': {
-                                'count': len(serializer_data),
-                                #'include': serializer_data.keys()
+                                'count': len(resource.get(field_name)),
                                 'include': []
                             }
                         }
@@ -169,17 +189,20 @@ class JSONRenderer(renderers.JSONRenderer):
                         relation_type or
                         utils.get_resource_type_from_instance(nested_resource_instance)
                     )
-                    relation_data = OrderedDict([
+
+                    nested_data = OrderedDict([
                         ('object', nested_resource_instance_type),
+                        ('id', nested_resource_instance.id)
                     ])
-                    relation_data.update(serializer_data)
-                    
+                    # nested_data.update(resource.get(field_name))
+
+                    relation_data.append(nested_data)
+
                 data.update({
                     field_name: {
                         'data': relation_data,
                         'meta': {
                             'count': len(relation_data),
-                            #'include': resource.get(field_name).keys()
                             'include': []
                         }
                     }
@@ -194,7 +217,7 @@ class JSONRenderer(renderers.JSONRenderer):
                     continue
 
                 relation_data = list()
-                include_fields = []
+
                 serializer_data = resource.get(field_name)
                 resource_instance_queryset = list(relation_instance)
                 if isinstance(serializer_data, list):
@@ -204,11 +227,12 @@ class JSONRenderer(renderers.JSONRenderer):
                             relation_type or
                             utils.get_resource_type_from_instance(nested_resource_instance)
                         )
-                        relation_data = OrderedDict([
+                        nested_data = OrderedDict([
                             ('object', nested_resource_instance_type),
                         ])
-                        relation_data.update(serializer_data[position])
-                        #include_fields = serializer_data[position].keys()
+                        nested_data.update(serializer_data[position])
+
+                        relation_data.append(nested_data)
 
                     data.update({
                         field_name: {
@@ -235,8 +259,6 @@ class JSONRenderer(renderers.JSONRenderer):
                     ])
                     relation_data.update(serializer_data)
 
-                #include_fields = serializer_data.keys() if serializer_data else []
-
                 data.update({
                     field_name: {
                         'data': relation_data,
@@ -249,43 +271,17 @@ class JSONRenderer(renderers.JSONRenderer):
 
         return utils.format_keys(data)
 
-    @classmethod
-    def build_json_resource_obj(cls, fields, resource, resource_instance, resource_name,
-                                force_type_resolution=False):
-        # Determine type from the instance if the underlying model is polymorphic
-        if force_type_resolution:
-            resource_name = utils.get_resource_type_from_instance(resource_instance)
-        resource_data = [
-            ('object', resource_name),
-            ('id', resource_instance.pk if resource_instance else None),
-        ]
-        attributes = cls.extract_attributes(fields, resource)
-        for field, value in attributes.items():
-            resource_data.append((field, value))
-
-        relationships = cls.extract_relationships(fields, resource, resource_instance)
-        for field, value in relationships.items():
-            resource_data.append((field, value))
-        #if relationships:
-        #    resource_data.append(('relationships', relationships))
-
-        # Add 'self' link if field is present and valid
-        if api_settings.URL_FIELD_NAME in resource and \
-                isinstance(fields[api_settings.URL_FIELD_NAME], relations.RelatedField):
-            resource_data.append(('links', {'self': resource[api_settings.URL_FIELD_NAME]}))
-        return OrderedDict(resource_data)
-
     def render(self, data, accepted_media_type=None, renderer_context=None):
+        print(data)
         view = renderer_context.get("view", None)
         request = renderer_context.get("request", None)
 
         # Get the resource name.
         resource_name = utils.get_resource_name(renderer_context)
 
+        # If this is an error response, skip the rest.
         if resource_name == 'errors':
-            return super(JSONRenderer, self).render(
-                data, accepted_media_type, renderer_context
-            )
+            return self.render_errors(data, accepted_media_type, renderer_context)
 
         # if response.status_code is 204 then the data to be rendered must
         # be None
@@ -293,13 +289,6 @@ class JSONRenderer(renderers.JSONRenderer):
         if response is not None and response.status_code == 204:
             return super(JSONRenderer, self).render(
                 None, accepted_media_type, renderer_context
-            )
-
-        # If `resource_name` is set to None then render default as the dev
-        # wants to build the output format manually.
-        if resource_name is None or resource_name is False:
-            return super(JSONRenderer, self).render(
-                data, accepted_media_type, renderer_context
             )
 
         from rest_framework_json_api.views import RelationshipView
@@ -317,8 +306,8 @@ class JSONRenderer(renderers.JSONRenderer):
         json_api_included = list()
         # initialize json_api_meta with pagination meta or an empty dict
         json_api_meta = data.get('meta', {}) if isinstance(data, dict) else {}
-        json_api_meta['custom'] = []
         json_api_meta['include'] = []
+        json_api_meta['custom'] = []
 
         if data and 'results' in data:
             serializer_data = data["results"]
@@ -403,10 +392,10 @@ class JSONRenderer(renderers.JSONRenderer):
             render_data['included'] = sorted(
                 unique_compound_documents, key=lambda item: (item['type'], item['id'])
             )
+
         if json_api_meta:
             render_data['meta'] = utils.format_keys(json_api_meta)
 
         return super(renderers.JSONRenderer, self).render(
             render_data, accepted_media_type, renderer_context
         )
-
