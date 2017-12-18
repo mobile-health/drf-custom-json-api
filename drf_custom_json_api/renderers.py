@@ -272,7 +272,6 @@ class JSONRenderer(renderers.JSONRenderer):
         return utils.format_keys(data)
 
     def render(self, data, accepted_media_type=None, renderer_context=None):
-        print(data)
         view = renderer_context.get("view", None)
         request = renderer_context.get("request", None)
 
