@@ -1,76 +1,60 @@
 from __future__ import unicode_literals
 
+from rest_framework_json_api import utils
+from rest_framework import renderers
 from collections import OrderedDict
-from rest_framework_json_api import renderers
-from django.utils import encoding, six
-from rest_framework.settings import api_settings
-from . import utils
 
 
 class JSONRenderer(renderers.JSONRenderer):
 
-    @classmethod
-    def extract_attributes(cls, fields, resource):
-        data = OrderedDict()
-        for field_name, field in six.iteritems(fields):
-            # ID is always provided in the root of JSON API so remove it from attributes
-            if field_name == 'id':
-                continue
-            # don't output a key for write only fields
-            if fields[field_name].write_only:
-                continue
-            # Overwite
-            # Skip fields with relations
-            '''
-            if isinstance(
-                    field, (relations.RelatedField, relations.ManyRelatedField, BaseSerializer)
-            ):
-                continue
-            '''
-            # Skip read_only attribute fields when `resource` is an empty
-            # serializer. Prevents the "Raw Data" form of the browsable API
-            # from rendering `"foo": null` for read only fields
-            try:
-                resource[field_name]
-            except KeyError:
-                if fields[field_name].read_only:
-                    continue
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        view = renderer_context.get("view", None)
+        request = renderer_context.get("request", None)
 
-            data.update({
-                field_name: resource.get(field_name)
-            })
+        # Get the resource name.
+        resource_name = utils.get_resource_name(renderer_context)
 
-        return utils.format_keys(data)
+        if resource_name == 'errors':
+            return super(JSONRenderer, self).render(
+                data, accepted_media_type, renderer_context
+            )
 
-    @classmethod
-    def build_json_resource_obj(cls, fields, resource, resource_instance, resource_name,
-                                force_type_resolution=False):
-        # Determine type from the instance if the underlying model is polymorphic
-        if force_type_resolution:
-            resource_name = utils.get_resource_type_from_instance(resource_instance)
-        resource_data = [
-            ('object', resource_name),
-            ('id', encoding.force_text(resource_instance.pk) if resource_instance else None),
-            # ('attributes', cls.extract_attributes(fields, resource)),
-        ]
-        attributes = cls.extract_attributes(fields, resource)
-        for field, value in attributes.items():
-            resource_data.append((field, value))
-        # Overwrite
-        '''
-        relationships = cls.extract_relationships(fields, resource, resource_instance)
-        if relationships:
-            resource_data.append(('relationships', relationships))
-        '''
-        # Add 'self' link if field is present and valid
-        if api_settings.URL_FIELD_NAME in resource and \
-                isinstance(fields[api_settings.URL_FIELD_NAME], relations.RelatedField):
-            resource_data.append(('links', {'self': resource[api_settings.URL_FIELD_NAME]}))
-        return OrderedDict(resource_data)
+        # if response.status_code is 204 then the data to be rendered must
+        # be None
+        response = renderer_context.get('response', None)
+        if response is not None and response.status_code == 204:
+            return super(JSONRenderer, self).render(
+                None, accepted_media_type, renderer_context
+            )
 
-    def render_errors(self, data, accepted_media_type=None, renderer_context=None):
-        return super(renderers.JSONRenderer, self).render(
-            data, accepted_media_type, renderer_context
+        # If `resource_name` is set to None then render default as the dev
+        # wants to build the output format manually.
+        if resource_name is None or resource_name is False:
+            return super(JSONRenderer, self).render(
+                data, accepted_media_type, renderer_context
+            )
+
+        # Make sure we render data in a specific order
+        render_data = OrderedDict()
+
+        #json_api_data = data
+        json_api_included = list()
+        # initialize json_api_meta with pagination meta or an empty dict
+
+
+        if data and 'results' in data:
+            json_api_data = data["results"]
+        else:
+            json_api_data = data
+
+        json_api_meta = data.get('meta', {}) if isinstance(data, dict) else {}
+        json_api_meta['custom'] = []
+        #json_api_meta['include'] = json_api_data.keys()
+        print(type(json_api_data))
+
+        render_data['data'] = json_api_data
+        render_data['meta'] = json_api_meta
+        return super(JSONRenderer, self).render(
+            render_data, accepted_media_type, renderer_context
         )
-
 
