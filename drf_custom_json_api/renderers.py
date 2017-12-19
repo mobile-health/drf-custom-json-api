@@ -10,6 +10,9 @@ from rest_framework.serializers import BaseSerializer, ListSerializer, Serialize
 
 
 class JSONRenderer(renderers.JSONRenderer):
+    media_type = 'application/json'
+    format = 'json'
+    
     @classmethod
     def build_json_resource_obj(cls, fields, resource, resource_instance, resource_name,
                                 force_type_resolution=False):
