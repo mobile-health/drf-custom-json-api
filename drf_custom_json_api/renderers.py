@@ -12,7 +12,7 @@ from rest_framework.serializers import BaseSerializer, ListSerializer, Serialize
 class JSONRenderer(renderers.JSONRenderer):
     media_type = 'application/json'
     format = 'json'
-    
+
     @classmethod
     def build_json_resource_obj(cls, fields, resource, resource_instance, resource_name,
                                 force_type_resolution=False):
@@ -308,6 +308,10 @@ class JSONRenderer(renderers.JSONRenderer):
         json_api_included = list()
         # initialize json_api_meta with pagination meta or an empty dict
         json_api_meta = data.get('meta', {}) if isinstance(data, dict) else {}
+        meta_pagination = json_api_meta.pop('pagination')
+        meta_links = json_api_meta.pop('links')
+        meta_pagination.update(meta_links)
+        json_api_meta['pagination'] = meta_pagination
         json_api_meta['include'] = []
         json_api_meta['custom'] = []
 
@@ -401,3 +405,4 @@ class JSONRenderer(renderers.JSONRenderer):
         return super(renderers.JSONRenderer, self).render(
             render_data, accepted_media_type, renderer_context
         )
+
