@@ -406,3 +406,8 @@ class JSONRenderer(renderers.JSONRenderer):
             render_data, accepted_media_type, renderer_context
         )
 
+    def render_errors(self, data, accepted_media_type=None, renderer_context=None):
+        return super(renderers.JSONRenderer, self).render(
+            data, accepted_media_type, renderer_context
+    )
+
