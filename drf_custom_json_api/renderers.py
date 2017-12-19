@@ -308,10 +308,11 @@ class JSONRenderer(renderers.JSONRenderer):
         json_api_included = list()
         # initialize json_api_meta with pagination meta or an empty dict
         json_api_meta = data.get('meta', {}) if isinstance(data, dict) else {}
-        meta_pagination = json_api_meta.pop('pagination')
-        meta_links = json_api_meta.pop('links')
-        meta_pagination.update(meta_links)
-        json_api_meta['pagination'] = meta_pagination
+        if json_api_meta:
+            meta_pagination = json_api_meta.pop('pagination')
+            meta_links = json_api_meta.pop('links')
+            meta_pagination.update(meta_links)
+            json_api_meta['pagination'] = meta_pagination
         json_api_meta['include'] = []
         json_api_meta['custom'] = []
 
@@ -410,4 +411,3 @@ class JSONRenderer(renderers.JSONRenderer):
         return super(renderers.JSONRenderer, self).render(
             data, accepted_media_type, renderer_context
     )
-
