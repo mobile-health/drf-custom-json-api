@@ -417,12 +417,17 @@ class JSONRenderer(renderers.JSONRenderer):
 class CustomJsonRender(OriJsonRenderer):
 
     def render(self, data, accepted_media_type=None, renderer_context=None):
+        meta_data = {
+            "include": [],
+            "custom": []
+        }
+
+        if 'pagination' in data:
+            meta_data["pagination"] = data.pop('pagination')
+            data = data["data"]
         render_data = {
             "data": data,
-            "meta": {
-                "include": [],
-                "custom": []
-            }
+            "meta": meta_data
         }
         return super(CustomJsonRender, self).render(data=render_data,
                                                     accepted_media_type=accepted_media_type,
