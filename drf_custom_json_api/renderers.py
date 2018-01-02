@@ -7,6 +7,7 @@ from rest_framework import relations
 from django.utils import encoding, six
 from rest_framework.settings import api_settings
 from rest_framework.serializers import BaseSerializer, ListSerializer, Serializer
+from rest_framework.renderers import JSONRenderer as OriJsonRenderer
 
 
 class JSONRenderer(renderers.JSONRenderer):
@@ -411,3 +412,18 @@ class JSONRenderer(renderers.JSONRenderer):
         return super(renderers.JSONRenderer, self).render(
             data, accepted_media_type, renderer_context
     )
+
+
+class CustomJsonRender(JSONRenderer):
+
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        render_data = {
+            "data": data,
+            "meta": {
+                "include": [],
+                "custom": []
+            }
+        }
+        return super(CustomJsonRender, self).render(data=render_data,
+                                                    accepted_media_type=accepted_media_type,
+                                                    renderer_context=renderer_context)
