@@ -414,7 +414,7 @@ class JSONRenderer(renderers.JSONRenderer):
     )
 
 
-class CustomJsonRender(JSONRenderer):
+class CustomJsonRender(OriJsonRenderer):
 
     def render(self, data, accepted_media_type=None, renderer_context=None):
         render_data = {
