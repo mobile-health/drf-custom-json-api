@@ -414,17 +414,16 @@ class JSONRenderer(renderers.JSONRenderer):
     )
 
 
-class CustomJsonRender(OriJsonRenderer):
+class CustomJsonRender(JSONRenderer):
 
     def render(self, data, accepted_media_type=None, renderer_context=None):
-        super_render_data = super(CustomJsonRender, self).render(data=data,
-                                                       accepted_media_type=accepted_media_type,
-                                                       renderer_context=renderer_context)
         render_data = {
-            "data": super_render_data,
+            "data": data,
             "meta": {
                 "include": [],
                 "custom": []
             }
         }
-        return render_data
+        return super(CustomJsonRender, self).render(data=render_data,
+                                                    accepted_media_type=accepted_media_type,
+                                                    renderer_context=renderer_context)
