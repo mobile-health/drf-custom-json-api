@@ -14,6 +14,9 @@ class NotUpdateSerializerMixin(object):
 
 
 class ResourceIdentifierSerializer(object):
+    def __init__(self, *args, **kwargs):
+        self.Meta.is_nested = kwargs.pop("is_nested", False)
+        super(ResourceIdentifierSerializer, self).__init__(*args, **kwargs)
 
     def to_representation(self, instance):
         represent_data = super(ResourceIdentifierSerializer, self).to_representation(instance)
@@ -22,4 +25,12 @@ class ResourceIdentifierSerializer(object):
         }
         for item in represent_data.items():
             data[item[0]] = item[1]
+        if self.Meta.is_nested:
+            data = {
+                "data": data,
+                "meta": {
+                    "include": [],
+                    "custom": []
+                }
+            }
         return data
