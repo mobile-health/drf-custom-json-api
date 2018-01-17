@@ -1,12 +1,18 @@
 # drf-custom-json-api
 
-This library is extended from https://github.com/django-json-api/django-rest-framework-json-api 
+This library is extended from https://github.com/django-json-api/django-rest-framework-json-api
 
 * Documentation: http://django-rest-framework-json-api.readthedocs.org/
 * Live demo (resets every hour): http://json-api.jerel.co/
 * Format specification: http://jsonapi.org/format/
 
-We customize the response of pagination 
+Installation pip
+===================
+```
+pip install -e git+https://github.com/mobile-health/drf-custom-json-api.git#egg=drf-custom-json-api
+```
+
+We customize the response of pagination
  from:
  ```
     {
@@ -53,7 +59,7 @@ We customize the response of pagination
         }
     }
  ```   
- 
+
  DRF Friendly Errors
 ===================
 
