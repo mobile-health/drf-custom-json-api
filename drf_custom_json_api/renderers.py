@@ -414,10 +414,10 @@ class JSONRenderer(renderers.JSONRenderer):
     )
 
 
-class CustomJsonRender(renderers.JSONRenderer):
+class CustomJsonRender(CustomJsonRender):
 
     def render_errors(self, data, accepted_media_type=None, renderer_context=None):
-        return super(renderers.JSONRenderer, self).render(
+        return super(CustomJsonRender, self).render(
             data, accepted_media_type, renderer_context
     )
 
