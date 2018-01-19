@@ -1,5 +1,5 @@
 from rest_framework_json_api.serializers import *
-from .utils import custom_get_resource_type_from_instance
+from .utils import custom_get_resource_type_from_instance, is_response_format_v2
 
 
 class NotUpdateSerializerMixin(object):
@@ -21,6 +21,9 @@ class ResourceIdentifierSerializer(object):
 
     def to_representation(self, instance):
         represent_data = super(ResourceIdentifierSerializer, self).to_representation(instance)
+        if not is_response_format_v2(self.context['request']):
+            return represent_data
+
         data = {
             'object': custom_get_resource_type_from_instance(instance)
         }
