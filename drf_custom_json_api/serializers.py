@@ -21,8 +21,10 @@ class ResourceIdentifierSerializer(object):
 
     def to_representation(self, instance):
         represent_data = super(ResourceIdentifierSerializer, self).to_representation(instance)
-        
+
         # Support only response formart v1
+        represent_data['object'] = custom_get_resource_type_from_instance(instance)
+        
         return represent_data
         
         # if is_response_format_v1(self.context['request']):
