@@ -21,20 +21,24 @@ class ResourceIdentifierSerializer(object):
 
     def to_representation(self, instance):
         represent_data = super(ResourceIdentifierSerializer, self).to_representation(instance)
-        if is_response_format_v1(self.context['request']):
-            return represent_data
+        
+        # Support only response formart v1
+        return represent_data
+        
+        # if is_response_format_v1(self.context['request']):
+        #     return represent_data
 
-        data = {
-            'object': custom_get_resource_type_from_instance(instance)
-        }
-        for item in represent_data.items():
-            data[item[0]] = item[1]
-        if self.Meta.is_nested:
-            data = {
-                "data": data,
-                "meta": {
-                    "include": [],
-                    "custom": []
-                }
-            }
-        return data
+        # data = {
+        #     'object': custom_get_resource_type_from_instance(instance)
+        # }
+        # for item in represent_data.items():
+        #     data[item[0]] = item[1]
+        # if self.Meta.is_nested:
+        #     data = {
+        #         "data": data,
+        #         "meta": {
+        #             "include": [],
+        #             "custom": []
+        #         }
+        #     }
+        # return data
