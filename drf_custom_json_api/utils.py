@@ -14,8 +14,8 @@ def get_response_format_from_request(request):
 	return request.query_params.get('response-format', '')
 
 
-def is_response_format_v1(request):
+def is_response_format_v2(request):
 	version = get_response_format_from_request(request)
-	if str(version).lower() == 'v1':
+	if str(version).lower() == 'v2':
 		return True
 	return False
