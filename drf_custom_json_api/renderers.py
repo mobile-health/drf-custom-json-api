@@ -423,13 +423,15 @@ class CustomJsonRender(OriJsonRenderer):
 
     def render(self, data, accepted_media_type=None, renderer_context=None):
 
-        if renderer_context:
+        try:
             # Get the resource name.
             resource_name = utils.get_resource_name(renderer_context)
 
             # If this is an error response, skip the rest.
             if resource_name == 'errors':
                 return self.render_errors(data, accepted_media_type, renderer_context)
+        except:
+            pass
 
         meta_data = {
             "include": [],
