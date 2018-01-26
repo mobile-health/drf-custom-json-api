@@ -100,7 +100,7 @@ setup(
     ],
     install_requires=[
         'djangorestframework-jsonapi',
-        'drf-friendly-errors'
+        'drf-friendly-errors',
         'raven'
     ],
     setup_requires=pytest_runner + sphinx + wheel,
