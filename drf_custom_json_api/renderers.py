@@ -438,7 +438,7 @@ class CustomJsonRender(OriJsonRenderer):
             "custom": []
         }
 
-        if 'pagination' in data:
+        if data and 'pagination' in data:
             meta_data["pagination"] = data.pop('pagination')
             data = data["data"]
         render_data = {

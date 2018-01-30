@@ -7,6 +7,7 @@ RESPONSE_VERSION_2 = 'v2'
 
 AVAILABLE_VERSIONS = [RESPONSE_VERSION_1, RESPONSE_VERSION_2]
 
+
 def custom_get_resource_type_from_instance(instance):
     #check if have custom field for mongo model
     if hasattr(instance, '_meta') and isinstance(instance._meta, dict) and "object_name" in instance._meta:
@@ -20,6 +21,7 @@ def get_default_version():
     if hasattr(settings, "RESPONSE_FORMAT_VERSION"):
         version = settings.RESPONSE_FORMAT_VERSION if settings.RESPONSE_FORMAT_VERSION in AVAILABLE_VERSIONS else RESPONSE_VERSION_1
     return version
+
 
 def get_response_format_from_request(request):
     version = str(request.query_params.get('response-format', '')).lower()
