@@ -99,7 +99,7 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
     install_requires=[
-        'djangorestframework-jsonapi',
+        'djangorestframework-jsonapi==2.3.1',
         'drf-friendly-errors',
         'raven'
     ],
