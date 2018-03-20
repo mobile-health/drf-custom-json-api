@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import collections
 import re
+import os
+import sys
 
 from rest_framework.views import exception_handler as default_django_rest_exception  # NOQA
 from raven.contrib.django.raven_compat.models import sentry_exception_handler
@@ -75,7 +77,8 @@ def get_error_data(status_code, errors, exc):
 
 
 def custom_exception_handler(exc, context):
-    if context.get('request'):
+    TESTING_MODE = os.path.basename(sys.argv[0]) in ('pytest', 'py.test')
+    if not TESTING_MODE and context.get('request'):
         sentry_exception_handler(request=context["request"])
     response = default_django_rest_exception(exc, context)
 
