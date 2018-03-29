@@ -3,6 +3,7 @@ import collections
 import re
 import os
 import sys
+import six
 
 from rest_framework.views import exception_handler as default_django_rest_exception  # NOQA
 from raven.contrib.django.raven_compat.models import sentry_exception_handler
@@ -25,7 +26,7 @@ VALIDATE_ERROR_ITEM = {
 
 def flatten(d, parent_key='', sep='_'):
     items = []
-    for k, v in d.iteritems():
+    for k, v in six.iteritems(d):
         new_key = parent_key + sep + k if parent_key else k
         if isinstance(v, collections.MutableMapping):
             items.extend(flatten(v, new_key, sep=sep).iteritems())
@@ -71,7 +72,7 @@ def get_validate_errors(errors):
 def get_error_data(status_code, errors, exc):
     error_data = ERROR_DATA_FORMAT
     error_data["code"] = 0
-    error_data["message"] = str(exc)
+    error_data["message"] = get_message_from_errors(errors)
     error_data["errors"] = get_validate_errors(errors)
     return error_data
 
