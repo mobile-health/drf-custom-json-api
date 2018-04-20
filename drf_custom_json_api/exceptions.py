@@ -29,7 +29,7 @@ def flatten(d, parent_key='', sep='_'):
     for k, v in six.iteritems(d):
         new_key = parent_key + sep + k if parent_key else k
         if isinstance(v, collections.MutableMapping):
-            items.extend(flatten(v, new_key, sep=sep).iteritems())
+            items.extend(six.iteritems(flatten(v, new_key, sep=sep)))
         else:
             items.append((new_key, v))
     return dict(items)
