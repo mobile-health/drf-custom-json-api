@@ -4,6 +4,7 @@ import re
 import os
 import sys
 import six
+import copy
 
 from rest_framework.views import exception_handler as default_django_rest_exception  # NOQA
 from raven.contrib.django.raven_compat.models import sentry_exception_handler
@@ -60,7 +61,7 @@ def get_validate_errors(errors):
     error_data = []
     try:
         for k, v in errors.items():
-            error_item = VALIDATE_ERROR_ITEM
+            error_item = copy.copy(VALIDATE_ERROR_ITEM)
             error_item["field"] = k
             error_item["message"] = v[0]
             error_data.append(error_item)
