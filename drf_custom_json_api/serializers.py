@@ -19,7 +19,7 @@ class ResourceIdentifierSerializer(object):
         super(ResourceIdentifierSerializer, self).__init__(*args, **kwargs)
 
     def to_representation(self, instance):
-        if 'request' in self.context and not is_response_format_v2(self.context['request']):
+        if not ('request' in self.context and is_response_format_v2(self.context['request'])):
             represent_data = super(ResourceIdentifierSerializer, self).to_representation(instance)
             represent_data['object'] = custom_get_resource_type_from_instance(instance)
             return represent_data
