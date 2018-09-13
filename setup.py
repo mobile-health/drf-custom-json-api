@@ -101,6 +101,7 @@ setup(
     install_requires=[
         'djangorestframework-jsonapi==2.3.1',
         'drf-friendly-errors',
+        'django-log-request-id==1.3.2',
         'raven'
     ],
     setup_requires=pytest_runner + sphinx + wheel,

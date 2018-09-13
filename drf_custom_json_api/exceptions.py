@@ -19,6 +19,12 @@ ERROR_DATA_FORMAT = {
     'errors': []
 }
 
+try:
+    from log_request_id import local
+    ERROR_DATA_FORMAT['request_id'] = local.request_id
+except Exception as e:
+    pass
+
 VALIDATE_ERROR_ITEM = {
     'field': "",
     'message': ""
@@ -38,15 +44,15 @@ def flatten(d, parent_key='', sep='_'):
 
 def replace_dot_without_decimal(msg):
     p = re.compile("(?<=\d)(\.)(?!\d)")
-    return p.sub("", msg)
+    return p.sub("", str(msg))
 
 
 def sanitize_message(msg):
     if isinstance(msg, list):
         msg = u'. '.join(replace_dot_without_decimal(v) for v in msg)
     else:
-        msg = msg.replace('.', '')
-    return msg
+        msg = replace_dot_without_decimal(msg)
+    return str(msg)
 
 
 def get_message_from_errors(errors):
