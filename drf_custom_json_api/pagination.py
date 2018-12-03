@@ -1,5 +1,6 @@
 from rest_framework_json_api.pagination import *
 from django.core.paginator import InvalidPage
+from django.conf import settings
 
 
 class CustomPageNumberPagination(PageNumberPagination):
