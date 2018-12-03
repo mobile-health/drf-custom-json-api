@@ -4,6 +4,10 @@ from django.core.paginator import InvalidPage
 
 class CustomPageNumberPagination(PageNumberPagination):
 
+    custom_max_page_size = settings.REST_FRAMEWORK.get('MAX_PAGE_SIZE')
+    if custom_max_page_size:
+        max_page_size = custom_max_page_size
+
     def get_paginated_response(self, data):
         next = None
         previous = None
