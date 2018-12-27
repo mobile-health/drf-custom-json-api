@@ -4,6 +4,7 @@ from rest_framework_json_api import utils
 from rest_framework_json_api import renderers
 from collections import OrderedDict
 from rest_framework import relations
+from rest_framework.status import HTTP_204_NO_CONTENT
 from django.utils import encoding, six
 from rest_framework.settings import api_settings
 from rest_framework.serializers import BaseSerializer, ListSerializer, Serializer
@@ -422,7 +423,6 @@ class CustomJsonRender(OriJsonRenderer):
     )
 
     def render(self, data, accepted_media_type=None, renderer_context=None):
-
         try:
             # Get the resource name.
             resource_name = utils.get_resource_name(renderer_context)
@@ -433,6 +433,13 @@ class CustomJsonRender(OriJsonRenderer):
         except:
             pass
 
+        response = renderer_context['response']
+        if response.status_code == HTTP_204_NO_CONTENT:
+            return super(CustomJsonRender, self).render(
+                data=data,
+                accepted_media_type=accepted_media_type,
+                renderer_context=renderer_context
+            )
         meta_data = {
             "include": [],
             "custom": []
@@ -445,6 +452,8 @@ class CustomJsonRender(OriJsonRenderer):
             "data": data,
             "meta": meta_data
         }
-        return super(CustomJsonRender, self).render(data=render_data,
-                                                    accepted_media_type=accepted_media_type,
-                                                    renderer_context=renderer_context)
+        return super(CustomJsonRender, self).render(
+            data=render_data,
+            accepted_media_type=accepted_media_type,
+            renderer_context=renderer_context
+        )

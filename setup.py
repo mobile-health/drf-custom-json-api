@@ -69,7 +69,7 @@ if sys.argv[-1] == 'publish':
     sys.exit()
 
 setup(
-    name='djangorestframework-custom-jsonapi',
+    name='drf-custom-json-api',
     version=get_version('drf_custom_json_api'),
     url='',
     license='MIT',
